@@ -15,7 +15,7 @@ end
 
 Implements the following multi-component active MCT kernel:
 
-M{αβ}(k,t) = 1 / (2*(2π)^dim) ∑{μνμ'ν'λ} ∫ dq F{μμ'}(q,t) F{νν'}(k-q,t) V{μνα}(k,q) V{μ'ν'λ}(k,q) [w{λβ}(k)]^(-1)
+M{αβ}(k,t) = ρ / (2*(2π)^dim) ∑{μνμ'ν'λ} ∫ dq F{μμ'}(q,t) F{νν'}(k-q,t) V{μνα}(k,q) V{μ'ν'λ}(k,q) [w{λβ}(k)]^(-1)
 
 where Greek indices {...} denote species labels and the expression for the vertices V{μνα}(k,q) is given in the documentation.
 Note: the input data (wk, Sk) should be given in the format Vector{ Matrix }, with the Vector having length Nk
