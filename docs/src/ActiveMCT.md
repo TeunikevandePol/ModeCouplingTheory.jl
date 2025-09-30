@@ -144,7 +144,7 @@ $$V^{\mu\nu\alpha}_{\mathbf{k},\mathbf{q}}= \sum_{\gamma}\frac{\omega_k^{\alpha\
 
 where $x_\alpha$ is the fraction of particles of species $\alpha$ and $\delta_{\alpha\beta}$ is a Kronecker delta. The multi-component modified direct correlation function is defined as 
 
-$$\mathcal{C}_q^{\alpha\beta} = \frac{\delta_{\alpha\beta}}{x_\alpha} - \sum_{\gamma\sigma} (w_\infty^{-1})^{\alpha\gamma} w_q^{\gamma\sigma} (S_q^{-1})^{\sigma\beta}$$
+$$\rho\mathcal{C}_q^{\alpha\beta} = \frac{\delta_{\alpha\beta}}{x_\alpha} - \sum_{\gamma\sigma} (w_\infty^{-1})^{\alpha\gamma} w_q^{\gamma\sigma} (S_q^{-1})^{\sigma\beta}$$
 
 The input data (consisting of $S_k^{\alpha\beta}$ and $\omega_k^{\alpha\beta}$) is expected to be a vector of matrices, with the vector having length $N_k$ and the matrix having size $N_s$ x $N_s$. Like the passive MCT kernels in this package, the input data is expected to be normalized by $N$. Note that this differs from the normalization introduced in [2].
 
