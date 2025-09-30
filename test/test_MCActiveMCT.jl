@@ -11,9 +11,9 @@ x = [0.8, 0.2]    # number fractions
 factor = [sqrt(x[1]*x[1]) sqrt(x[1]*x[2]); sqrt(x[2]*x[1]) sqrt(x[2]*x[2])]
 
 # read sample data
-Sk_file = readdlm("dataVincent_Sk_Teff4.0_tau0.001.txt", ';')
-wk_file = readdlm("dataVincent_wk_Teff4.0_tau0.001.txt", ';')
-w0 = SMatrix{Ns,Ns}(readdlm("dataVincent_w0_Teff4.0_tau0.001.txt",';')) .* factor;
+Sk_file = readdlm("data_Sk_Teff4.0_tau0.001.txt", ';')
+wk_file = readdlm("data_wk_Teff4.0_tau0.001.txt", ';')
+w0 = SMatrix{Ns,Ns}(readdlm("data_w0_Teff4.0_tau0.001.txt",';'))
 
 Sk = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
 wk = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
@@ -21,8 +21,6 @@ wk = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
 for i=1:Nk  # rewrite to static matrices
     Sk[i] = Sk_file[i,:]
     wk[i] = wk_file[i,:]
-    Sk[i] = Sk[i] .* factor
-    wk[i] = wk[i] .* factor
 end
 
 α = 1.0; β = 1/τₚ; δ = @SMatrix zeros(Ns, Ns);
