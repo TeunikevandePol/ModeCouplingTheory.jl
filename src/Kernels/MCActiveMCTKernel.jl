@@ -33,20 +33,20 @@ and the Matrix having size Ns x Ns. Nk is the number of k-points and Ns is the n
 function ActiveMultiComponentKernel(ρₐ, k_array, wk, w0, Sk, dim = 3)
     Nk = length(k_array);
     Ns = size(Sk[1],1);
+    ρtot = sum(ρₐ)
+    xₐ = ρₐ ./ ρtot
 
     Δk = k_array[2] - k_array[1];
-    # prefactor = Δk^2 * surface_d_dim_unit_sphere(dim-1) /(2 * (2*π)^dim);
-    prefactor = sum(ρₐ) * Δk^2 * surface_d_dim_unit_sphere(dim-1) /(2 * (2*π)^dim);
+    prefactor = ρtot * Δk^2 * surface_d_dim_unit_sphere(dim-1) /(2 * (2*π)^dim);
+    # prefactor = Δk^2 * surface_d_dim_unit_sphere(dim-1) /(2 * (2*π)^dim);  # old normalization
 
     J = zeros(Nk, Nk, Nk);
     V2 = zeros(Nk, Nk, Nk, Ns, Ns, Ns);
     DCF = zero(Sk);
-    xₐ = ρₐ ./ sum(ρₐ)
 
     for i=1:Nk  # calculate direct correlation function
-        DCF[i] = ( I(Ns) ./ xₐ - inv(w0) * wk[i] * inv(Sk[i]) ) ./ sum(ρₐ);
-        # DCF[i] = (I(Ns) - inv(w0) * wk[i] * inv(Sk[i])) ./ sum(ρₐ);
-        # DCF[i] = I(Ns) - inv(w0) * wk[i] * inv(Sk[i]);
+        DCF[i] = ( I(Ns) ./ xₐ - inv(w0) * wk[i] * inv(Sk[i]) ) ./ ρtot
+        # DCF[i] = I(Ns) - inv(w0) * wk[i] * inv(Sk[i]);  # old normalization
     end
 
     for i=1:Nk, j=1:Nk, l=abs(j-i)+1:min(i+j-1,Nk)  # calculate the vertices and Jacobian
@@ -57,17 +57,14 @@ function ActiveMultiComponentKernel(ρₐ, k_array, wk, w0, Sk, dim = 3)
 
         for μ=1:Ns, ν=1:Ns, α=1:Ns, γ = 1:Ns
             if γ == ν
-                # V2[l,j,i,μ,ν,α] += kdotq * wk[i][α,γ] * DCF[j][γ,μ] / sqrt(ρₐ[γ]);
-                # V2[l,j,i,μ,ν,α] += kdotq * wk[i][α,γ] * DCF[j][γ,μ] / sqrt(xₐ[γ]);
                 V2[l,j,i,μ,ν,α] += kdotq * wk[i][α,γ] * DCF[j][γ,μ] / xₐ[γ]
+                # V2[l,j,i,μ,ν,α] += kdotq * wk[i][α,γ] * DCF[j][γ,μ] / sqrt(ρₐ[γ]);  # old normalization
             end
             if γ == μ
-                # V2[l,j,i,μ,ν,α] += kdotp * wk[i][α,γ] * DCF[l][γ,ν] / sqrt(ρₐ[γ]);
-                # V2[l,j,i,μ,ν,α] += kdotp * wk[i][α,γ] * DCF[l][γ,ν] / sqrt(xₐ[γ]);
                 V2[l,j,i,μ,ν,α] += kdotp * wk[i][α,γ] * DCF[l][γ,ν] / xₐ[γ]
+                # V2[l,j,i,μ,ν,α] += kdotp * wk[i][α,γ] * DCF[l][γ,ν] / sqrt(ρₐ[γ]);  # old normalization
             end
         end
-
         J[l,j,i] = 2*p*q/((2*k)^(dim-2))*( (q+p-k)*(k+p-q)*(k+q-p)*(k+p+q) )^((dim-3)/2);
     end
 
