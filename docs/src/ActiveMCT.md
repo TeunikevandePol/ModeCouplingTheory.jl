@@ -4,7 +4,7 @@ Next to standard mode-coupling theory (MCT), we also implemented a mode-coupling
 
 $$\ddot{F}(k,t) + \frac{1}{\tau_p}\dot{F}(k,t) + \frac{\omega(k) k^2}{S(k)}F(k,t) + \int_0^t \text{d}t'\ M(k,t-t') \dot{F}(k,t') = 0.$$
 
-Here, $\tau_p$ is the persistence time of a single active particle. Active MCT requires extra input in the form of spatial velocity correlations $\omega(k)$ and their infinite-wavelength limit $\omega(\infty)$. Since the effect of active forces is encoded in $S(k)$, $\omega(k)$ and $\omega(\infty)$, the theory can be directly applied to different systems, such as active Brownian particles or active Ornstein-Uhlenbeck particles.
+Here, $\tau_p$ is the persistence time of a single active particle. Active MCT requires extra input in the form of spatial velocity correlations $\omega(k)$ and their infinite-wavelength limit $\omega(\infty)$. Since the effect of active forces is contained in $S(k)$, $\omega(k)$ and $\omega(\infty)$, the theory can be directly applied to different systems, such as active Brownian particles or active Ornstein-Uhlenbeck particles.
 
 The memory kernel $M(k,t)$ in $d$ dimensions is given by
 
@@ -53,7 +53,7 @@ end
 # (w(k) is usually obtained from simulation data)
 approx_wk(x) = @. 0.8*(1 + cos(1.5*x)*exp(-0.2*x));
 wk = approx_wk(k_array);
-w0=0.85;
+w0 = 0.85;
 Sk = find_analytical_S_k(k_array, η);
 
 # memory equation coefficients
@@ -136,17 +136,19 @@ $$\ddot{F}^{\alpha\beta}_k(t) + \frac{1}{\tau_p}\dot{F}^{\alpha\beta}_k(t) + \su
 
 where Greek letters denote particle species. The input now consists of partial structure factors ( $S_k^{\alpha\beta}$ ) and partial velocity correlations ( $\omega_k^{\alpha\beta}$ and $\omega_\infty^{\alpha\beta}$ ). The multicomponent memory kernel can be written as
 
-$$M^{\alpha\beta}_k(t) = \frac{1}{2 (2\pi)^d} \sum_{\substack{\mu\, \nu \\ \mu'\nu'}}\sum_{\lambda} \int \text{d}\mathbf{q}\ F^{\mu\mu'}_q(t) F^{\nu\nu'}_{|\mathbf{k}-\mathbf{q}|}(t) V^{\mu\nu\alpha}_{\mathbf{k},\mathbf{q}} V^{\mu'\nu'\lambda}_{\mathbf{k},\mathbf{q}} (\omega^{-1}_k)^{\lambda\beta}.$$
+$$M^{\alpha\beta}_k(t) = \frac{\rho}{2 (2\pi)^d} \sum_{\substack{\mu\, \nu \\ \mu'\nu'}}\sum_{\lambda} \int \text{d}\mathbf{q}\ F^{\mu\mu'}_q(t) F^{\nu\nu'}_{|\mathbf{k}-\mathbf{q}|}(t) V^{\mu\nu\alpha}_{\mathbf{k},\mathbf{q}} V^{\mu'\nu'\lambda}_{\mathbf{k},\mathbf{q}} (\omega^{-1}_k)^{\lambda\beta}.$$
 
 The multicomponent vertices are defined as
 
-$$V^{\mu\nu\alpha}_{\mathbf{k},\mathbf{q}}= \sum_{\gamma}\frac{\omega_k^{\alpha\gamma}}{\sqrt{\rho_\gamma}} \left( \frac{\mathbf{k}\cdot\mathbf{q}}{k} \delta_{\gamma\nu} \mathcal{C}_q^{\gamma\mu} + \frac{\mathbf{k}\cdot(\mathbf{k}-\mathbf{q})}{k} \delta_{\gamma\mu} \mathcal{C}^{\gamma\nu}_{|\mathbf{k}-\mathbf{q}|} \right),$$
+$$V^{\mu\nu\alpha}_{\mathbf{k},\mathbf{q}}= \sum_{\gamma}\frac{\omega_k^{\alpha\gamma}}{x_\gamma} \left( \frac{\mathbf{k}\cdot\mathbf{q}}{k} \delta_{\gamma\nu} \mathcal{C}_q^{\gamma\mu} + \frac{\mathbf{k}\cdot(\mathbf{k}-\mathbf{q})}{k} \delta_{\gamma\mu} \mathcal{C}^{\gamma\nu}_{|\mathbf{k}-\mathbf{q}|} \right),$$
 
 where $x_\alpha$ is the fraction of particles of species $\alpha$ and $\delta_{\alpha\beta}$ is a Kronecker delta. The multi-component modified direct correlation function is defined as 
 
-$$\mathcal{C}_q^{\alpha\beta} = \delta_{\alpha\beta} - \sum_{\gamma\sigma} (w_\infty^{-1})^{\alpha\gamma} w_q^{\gamma\sigma} (S_q^{-1})^{\sigma\beta}$$
+$$\rho\mathcal{C}_q^{\alpha\beta} = \frac{\delta_{\alpha\beta}}{x_\alpha} - \sum_{\gamma\sigma} (w_\infty^{-1})^{\alpha\gamma} w_q^{\gamma\sigma} (S_q^{-1})^{\sigma\beta}$$
 
-The multi-component kernel is also not implemented using Bengtzelius' trick. Instead, we used the package Tullio to improve the performance of the active kernel. If you want to use an active kernel in odd dimensions greater than 3, you could consider implementing this trick (see also the passive multi-component MCT kernel) for better performance.
+The input data (consisting of $S_k^{\alpha\beta}$ and $\omega_k^{\alpha\beta}$) is expected to be a vector of matrices, with the vector having length $N_k$ and the matrix having size $N_s$ x $N_s$. Like the passive MCT kernels in this package, the input data is expected to be normalized by $N$. Note that this differs from the normalization introduced in [2].
+
+The multi-component kernel is also not implemented using Bengtzelius' trick. Instead, we used the package Tullio to improve the performance of the active kernel. If you want to use an active kernel in three dimensions, you could consider implementing this trick (see also the passive multi-component MCT kernel) for faster compilation.
 
 ### Example code multi-component kernel
 
@@ -163,9 +165,9 @@ x = [0.8, 0.2]  # number fractions
 ρₐ = ρ_all * x  # partial densities
 
 # the input data can be found in the \test\ folder
-Sk_file = readdlm("dataVincent_Sk_Teff4.0_tau0.001.txt", ';')
-wk_file = readdlm("dataVincent_wk_Teff4.0_tau0.001.txt", ';')
-w0 = SMatrix{Ns,Ns}(readdlm("dataVincent_w0_Teff4.0_tau0.001.txt",';'));
+Sk_file = readdlm("data_Sk_Teff4.0_tau0.001.txt", ';')
+wk_file = readdlm("data_wk_Teff4.0_tau0.001.txt", ';')
+w0 = SMatrix{Ns,Ns}(readdlm("data_w0_Teff4.0_tau0.001.txt",';'));
 
 # rewrite data as a vector of Static Matrices for improved performance
 Sk = [@SMatrix zeros(Ns, Ns) for i=1:Nk]
@@ -207,23 +209,8 @@ title!("Active multicomponent mode-coupling kernel (k=7.4)")
 ![image](images/activeMCT_mc_plot.png)
 
 
-## Note on input data
-
-The input data (consisting of $S_k^{\alpha\beta}$ and $\omega_k^{\alpha\beta}$) is expected to be a vector of matrices, with the vector having length $N_k$ and the matrix having size $N_s$ x $N_s$.
-
-Note that the multicomponent active MCT kernel has been implemented with the following convention for the partial structure factor and direct correlation function, **which is different** from the convention used for the passive kernels in this package:
-
-$$S_k^{\alpha\beta} = \frac{1}{\sqrt{N_\alpha N_\beta}} \sum_{i=1}^{N_\alpha} \sum_{j=1}^{N_\beta} \braket{ e^{i\mathbf{k}\cdot(\mathbf{r}_j^\beta - \mathbf{r}_i^\alpha)}}$$
-
-$$C_{k}^{\alpha\beta} = \delta_{\alpha\beta} - (S^{-1}_k)^{\alpha\beta}$$
-
-The definitions used in the passive kernels are given in [3]. The structure factor can be converted to the right format by simply changing the (species-dependent) prefactor.
-
-
 ## References
 
 [1] G. Szamel. *Theory for the dynamics of dense systems of athermal self-propelled particles*. Phys. Rev. E **93**, 012603 (2016).
 
 [2] V.E. Debets and L.M.C. Janssen. *Mode-coupling theory for mixtures of athermal self-propelled particles*. J. Chem. Phys. **159**, 014502 (2023).
-
-[3] F. Weysser et al. *Structural relaxation of polydisperse hard spheres: Comparison of the mode-coupling theory to a Langevin dynamics simulation*. Phys. Rev. E **82**, 011504 (2010).

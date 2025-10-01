@@ -7,10 +7,13 @@ x = [0.8, 0.2]    # number fractions
 ρ_all = 1.2;      # number density
 ρₐ = ρ_all * x    # partial densities
 
+# factor to renormalize the input data
+factor = [sqrt(x[1]*x[1]) sqrt(x[1]*x[2]); sqrt(x[2]*x[1]) sqrt(x[2]*x[2])]
+
 # read sample data
-Sk_file = readdlm("dataVincent_Sk_Teff4.0_tau0.001.txt", ';')
-wk_file = readdlm("dataVincent_wk_Teff4.0_tau0.001.txt", ';')
-w0 = SMatrix{Ns,Ns}(readdlm("dataVincent_w0_Teff4.0_tau0.001.txt",';'));
+Sk_file = readdlm("data_Sk_Teff4.0_tau0.001.txt", ';')
+wk_file = readdlm("data_wk_Teff4.0_tau0.001.txt", ';')
+w0 = SMatrix{Ns,Ns}(readdlm("data_w0_Teff4.0_tau0.001.txt",';'))
 
 Sk = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
 wk = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
@@ -39,23 +42,17 @@ sol = solve(prob, solver);
 
 
 # equivalence with passive kernel
-# NOTE: S(k) should be re-defined for the passive kernel as the data uses different definitions
 Sk_file_0 = readdlm("dataVincent_Sk_Teff4.0_tau0.txt", ';')
 Sk_0 = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
-Sk_2 = [@SMatrix zeros(Ns, Ns) for i=1:Nk];
-Na = 1000 * x;
 
 for i=1:Nk
     test = zeros(Ns,Ns)
     Sk_0[i] = Sk_file_0[i,:]
-    for α=1:Ns, β=1:Ns
-        test[α,β] = Sk_0[i][α,β] * sqrt(Na[α] * Na[β]);
-    end
-    Sk_2[i] = test ./ sum(Na);
+    Sk_0[i] = Sk_0[i] .* factor
 end
 
-wk_pass = [SMatrix{Ns,Ns}(1.0.*I(Ns)) for i=1:Nk];
-w0_pass = SMatrix{Ns,Ns}(1.0.*I(Ns));
+wk_pass = [SMatrix{Ns,Ns}(factor.*I(Ns)) for i=1:Nk];
+w0_pass = SMatrix{Ns,Ns}(factor.*I(Ns));
 γ_pass = [@SMatrix zeros(Ns, Ns) for j=1:Nk];
 γ_pas2 = [@SMatrix zeros(Ns, Ns) for j=1:Nk];
 J = similar(Sk_0) .* 0.0
@@ -64,19 +61,19 @@ for i=1:Nk
     γ_pass[i] = k_array[i]^2 .* wk_pass[i] * inv(Sk_0[i]);
     J[i] = k_array[i]^2 * x ./ ones(Ns) .* I(Ns)
 end
-γ_pas2 = J .* inv.(Sk_2);
+γ_pas2 = J .* inv.(Sk_0);
 
 ker2 = ActiveMultiComponentKernel(ρₐ, k_array, wk_pass, w0_pass, Sk_0, 3);
 prob2 = MemoryEquation(0.0, 1.0, γ_pass, δ, Sk_0, zero(Sk_0), ker2);
 sol2 = solve(prob2, solver);
 
-kerP = MultiComponentModeCouplingKernel(ρₐ, 1.0, ones(Ns), k_array, Sk_2);
-probP = MemoryEquation(0.0, 1.0, γ_pas2, δ, Sk_2, zero(Sk_2), kerP);
+kerP = MultiComponentModeCouplingKernel(ρₐ, 1.0, ones(Ns), k_array, Sk_0);
+probP = MemoryEquation(0.0, 1.0, γ_pas2, δ, Sk_0, zero(Sk_0), kerP);
 solP = solve(probP, solver);
 
 @test find_relaxation_time(get_t(sol2), get_F(sol2,:,5,1)) ≈ find_relaxation_time(get_t(solP), get_F(solP,:,5,1)) rtol=1e-5
-@test sum(sum(sum( get_F(sol2,:,1,1) / Sk_0[1][1] ))) ≈ sum(sum(sum( get_F(solP,:,1,1) / Sk_2[1][1] ))) rtol=1e-7
-@test sum(sum(sum( get_F(sol2,:,1,2) / Sk_0[1][2] ))) ≈ sum(sum(sum( get_F(solP,:,1,2) / Sk_2[1][2] ))) rtol=1e-7
+@test sum(sum(sum( get_F(sol2,:,1,1) / Sk_0[1][1] ))) ≈ sum(sum(sum( get_F(solP,:,1,1) / Sk_0[1][1] ))) rtol=1e-7
+@test sum(sum(sum( get_F(sol2,:,1,2) / Sk_0[1][2] ))) ≈ sum(sum(sum( get_F(solP,:,1,2) / Sk_0[1][2] ))) rtol=1e-7
 
 # effect of changing the activity (wk and w0)
 @test sol2.F != sol.F
