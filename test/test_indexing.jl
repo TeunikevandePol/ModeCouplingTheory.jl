@@ -35,7 +35,7 @@ system = MemoryEquation(α, β, γ, δ, F₀, ∂ₜF₀, kernel)
 solverFuchs = TimeDoublingSolver(N=4, tolerance=10^-12, max_iterations=20000, Δt=10^-4, t_max=10.0^3, verbose=false)
 sol = solve(system, solverFuchs);
 
-
+@show typeof(sol.K)
 
 @test get_F(sol) == sol.F
 @test get_F(sol, 23, 12, (1, 2)) == sol.F[23][12][1, 2]
