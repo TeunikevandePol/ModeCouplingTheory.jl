@@ -22,9 +22,10 @@ kernelMCMCT = MultiComponentModeCouplingKernel([ρ], kBT, [m], k_array, [@SMatri
 kernelMCT = ModeCouplingKernel(ρ, kBT, m, k_array, Sₖ)
 
 Ftest = rand(SMatrix{1,1,Float64,1}, N)
-K1 = getindex.(evaluate_kernel(kernelnaive, Ftest, 0.0), (1,1))
-K2 = getindex.(evaluate_kernel(kernelMCMCT, Ftest, 0.0), 1)
-K3 = evaluate_kernel(kernelMCT, getindex.(Ftest, 1), 0.0)
+K1 = getindex.(evaluate_kernel(kernelnaive, Ftest, 0.0).diag, 1)
+K2 = getindex.(evaluate_kernel(kernelMCMCT, Ftest, 0.0).diag, 1)
+K3 = evaluate_kernel(kernelMCT, getindex.(Ftest, 1), 0.0).diag
+
 
 @test all(K1 .≈ K2 .≈ K3)
 
