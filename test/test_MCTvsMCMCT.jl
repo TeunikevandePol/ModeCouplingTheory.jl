@@ -22,7 +22,11 @@ kernelMCMCT = MultiComponentModeCouplingKernel([ρ], kBT, [m], k_array, [@SMatri
 kernelMCT = ModeCouplingKernel(ρ, kBT, m, k_array, Sₖ)
 
 Ftest = rand(SMatrix{1,1,Float64,1}, N)
-@test all(getindex.(evaluate_kernel(kernelnaive, Ftest, 0.0), 1) .≈ getindex.(evaluate_kernel(kernelMCMCT, Ftest, 0.0), 1) .≈ evaluate_kernel(kernelMCT, getindex.(Ftest, 1), 0.0))
+K1 = getindex.(evaluate_kernel(kernelnaive, Ftest, 0.0), 1)
+K2 = getindex.(evaluate_kernel(kernelMCMCT, Ftest, 0.0), 1)
+K3 = evaluate_kernel(kernelMCT, getindex.(Ftest, 1), 0.0))
+
+@test all(K1 .≈ K2 .≈ K3)
 
 
 systemMCT = MemoryEquation(α, β, γ, δ, F0, ∂F0, kernelMCT)
