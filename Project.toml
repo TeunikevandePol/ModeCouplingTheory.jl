@@ -17,7 +17,7 @@ Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
 Dierckx = "0.5"
-LinearSolve = "2"
+LinearSolve = "2, 3"
 LoopVectorization = "0.12.160"
 SpecialFunctions = "2"
 StaticArrays = "1.5"
