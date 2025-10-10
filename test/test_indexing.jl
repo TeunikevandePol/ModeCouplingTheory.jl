@@ -70,3 +70,4 @@ sol = solve(system, solverFuchs);
 @test get_K(sol, 12:53) == sol.K[12:53]
 
 @test get_t(sol) == sol.t
+@test get_t(sol, 12:53) == sol.t[12:53]
